@@ -4,18 +4,13 @@ from telebot.types import Message
 from datetime import datetime
 import pytz
 from random import randint
+from bs4 import BeautifulSoup as BS
 
 TOKEN = '934221825:AAFgsBoxVRarQqO8H6JL_5ku7vdNYwLAP0M'
 
 BASE_URL = 'https://api.telegram.org/bot{}/'.format(TOKEN)
 
 bot = telebot.TeleBot(TOKEN)
-
-chat_ids = [
-     558801744,
-    -365197085,
-     491835686
-]
 
 @bot.message_handler(commands=['randomemoji'])
 def send_randomemoji(message:Message):
@@ -40,8 +35,8 @@ def send_location(message:Message):
 def send_help(message:Message):
     commands = [
                 'sendlocation - send his location',
-                'whattimeisit - send you the time in your city',
-                'howistheweather - send you the weather in your city',
+                'whattimeisit - send you the time in your city(format of command - whattimeisit your timezone)',
+                'howistheweather - send you the weather in your city(format of command - howistheweather your city',
                 'randomemoji - send you random emoji',
                 'hello - hello',
                 'help - send you the list of commands'
@@ -51,24 +46,36 @@ def send_help(message:Message):
         total += i + '\n'
     bot.send_message(message.chat.id, total)
 
+#{'ok': True, 'result': [{'update_id': 780289943, 'message': {'message_id': 506, 'from': {'id': 558801744, 'is_bot': False, 'first_name': 'Егор', 'last_name': 'Летов,а может и нет', 'language_code': 'ru'}, 'chat': {'id': 558801744, 'first_name': 'Егор', 'last_name': 'Летов,а может и нет', 'type': 'private'}, 'date': 1578682638, 'text': 'gggg'}}]}
+
+@bot.message_handler(commands='howistheweather')
+def send_weather(message:Message):
+    mes = message.text.replace('/howistheweather ', '')
+    weather_url = 'https://yandex.ru/pogoda/' + mes.lower()
+    response = requests.get(weather_url)
+    html = BS(response.text, 'html.parser')
+    t = html.find('span', {'class': 'temp__value'}).text
+    wind_speed = html.find('span', {'class': 'wind-speed'}).text
+    humidity = html.find('div', {'class': 'term term_orient_v fact__humidity'}).text
+    pressure = html.find('div', {'class': 'term term_orient_v fact__pressure'}).text
+    bot.send_message(message.chat.id,'The tempreture in your city is {}, wind speed is {}, humidity is {}, the pressure is {}'.format(t, wind_speed, humidity, pressure))
+
 @bot.message_handler(commands=['whattimeisit'])
 def send_time(message:Message):
-    bot.send_message(message.chat.id, 'Ok. Send your timezone in format (part of the world/city)?')
-    @bot.message_handler(func=lambda message: True)
-    def get_usercity(message: Message):
-        try:
-            location = message.text
-            timezone = pytz.timezone(location)
-            time = datetime.now(timezone)
-            bot.send_message(message.chat.id, 'it is {} in your city'.format(time))
-        except:
-            pytz.exceptions.UnknownTimeZoneError
-            bot.send_message(message.chat.id, 'Sorry! Misunderstanded you')
+    try:
+        location = message.text.replace('/whattimeisit ', '')
+        timezone = pytz.timezone(location)
+        time = datetime.now(timezone)
+        bot.send_message(message.chat.id, 'it is {} in your city'.format(time))
+    except:
+        pytz.exceptions.UnknownTimeZoneError
+        bot.send_message(message.chat.id, 'Sorry! Misunderstanded you')
 
 def get_response(func):
     return requests.get(BASE_URL + func).json()
 
 
 print(get_response('getupdates'))
+
 bot.polling()
 
