@@ -50,15 +50,19 @@ def send_help(message:Message):
 
 @bot.message_handler(commands='howistheweather')
 def send_weather(message:Message):
-    mes = message.text.replace('/howistheweather ', '')
-    weather_url = 'https://yandex.ru/pogoda/' + mes.lower()
-    response = requests.get(weather_url)
-    html = BS(response.text, 'html.parser')
-    t = html.find('span', {'class': 'temp__value'}).text
-    wind_speed = html.find('span', {'class': 'wind-speed'}).text
-    humidity = html.find('div', {'class': 'term term_orient_v fact__humidity'}).text
-    pressure = html.find('div', {'class': 'term term_orient_v fact__pressure'}).text
-    bot.send_message(message.chat.id,'The tempreture in your city is {}, wind speed is {}, humidity is {}, the pressure is {}'.format(t, wind_speed, humidity, pressure))
+    try:
+        mes = message.text.replace('/howistheweather ', '')
+        weather_url = 'https://yandex.ru/pogoda/' + mes.lower()
+        response = requests.get(weather_url)
+        html = BS(response.text, 'html.parser')
+        t = html.find('span', {'class': 'temp__value'}).text
+        wind_speed = html.find('span', {'class': 'wind-speed'}).text
+        humidity = html.find('div', {'class': 'term term_orient_v fact__humidity'}).text
+        pressure = html.find('div', {'class': 'term term_orient_v fact__pressure'}).text
+        bot.send_message(message.chat.id,'The tempreture in your city is {}, wind speed is {}, humidity is {}, the pressure is {}'.format(t, wind_speed, humidity, pressure))
+    except:
+        AttributeError
+        bot.send_message(message.chat.id, 'wrong city')
 
 @bot.message_handler(commands=['whattimeisit'])
 def send_time(message:Message):
@@ -78,4 +82,6 @@ def get_response(func):
 print(get_response('getupdates'))
 
 bot.polling()
+
+
 
