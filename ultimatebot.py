@@ -31,6 +31,30 @@ def say_hello(message:Message):
 def send_location(message:Message):
     bot.send_location(message.chat.id, 55.695703, 37.926654)
 
+@bot.message_handler(commands=['randfilm'])
+def rand_film_generate(message:Message):
+    url = 'https://www.kinopoisk.ru/top/'
+
+    response = requests.get(url)
+
+    html = response.text
+
+    soup = BS(html, "html.parser")
+
+    tds = soup.find_all('td', {'style': "height: 27px; vertical-align: middle; padding: 6px 30px 6px 0"})
+
+    names = []
+
+    e = 0
+    for item in tds:
+        e += 1
+        film = str(e) + '.' + item.find('a', {'class': 'all'}).text
+        names.append(film)
+    e = randint(0, len(names))
+    print(names[e])
+    bot.send_message(message.chat.id, names[e])
+
+
 @bot.message_handler(commands=['help'])
 def send_help(message:Message):
     commands = [
@@ -82,6 +106,7 @@ def get_response(func):
 print(get_response('getupdates'))
 
 bot.polling()
+
 
 
 
