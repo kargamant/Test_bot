@@ -63,6 +63,7 @@ def send_help(message:Message):
                 'howistheweather - send you the weather in your city(format of command - howistheweather your city',
                 'randomemoji - send you random emoji',
                 'hello - hello',
+                'randfilm - send you random film from top-250 on kinopoisk',
                 'help - send you the list of commands'
                 ]
     total = ''
